@@ -10,8 +10,8 @@ def retriever(text):
             allow_dangerous_deserialization=True
             )
     retriever=vector_store.as_retriever(
-            search_type="mmr",
-            search_kwargs={"k": 6, "lambda_mult": 0.5}
+            search_type="similarity",
+            search_kwargs={"k": 7, "lambda_mult": 0.5}
 
 
             )

@@ -3,42 +3,40 @@
 # ask from qn
 # give answer
 
-from vecStore import store_vec
-from retriever import retriever
 import os
-from langchain_core.prompts import PromptTemplate
-
-from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
+from langchain_core._api.deprecation import LangChainDeprecationWarning
+import warnings
+
+warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
+
+
 load_dotenv()
 
 
-print("starting..")
 def prepare_prompt(question):
+    from retriever import retriever
+    from langchain_core.prompts import PromptTemplate
     prompt = PromptTemplate(
         template="""
-You are a helpful and knowledgeable YouTube assistant.
-You are given the context of a YouTube video (such as the transcript or description).
+You are a precise and knowledgeable YouTube assistant.
+You are given the context of a YouTube video (transcript, description, or captions).
 
-Based on this context, your job is to accurately answer questions related to the video.
-If the context is clear and sufficient, provide a direct and informative answer.
-If the context is missing or unclear, simply reply:
+Your task is to answer the question strictly based on the provided context.
+- If the context is sufficient, give a direct, accurate, and factual answer.
+- Keep answers concise but clear; include relevant details.
+- Do NOT speculate or add information not present in the context.
+- If the context is missing, unclear, or insufficient, reply exactly:
 “I’m sorry, but I don’t have enough information to answer that.”
-Try to answer in as few words as possible.But keep it detailed.
-Be concise, factual, and avoid making assumptions beyond the provided context.
-
-
-
+- Format your answer for terminal display; do not use Markdown.
 
 Context:
 {context}
 
 Question:
 {question}
-""",
-        input_variables=["context", "question"],
-    )
-
+"""
+)    
     retrieved_docs = retriever(question)
 
     context_text = "\n\n".join(
@@ -57,12 +55,15 @@ Question:
 
 
 def add_faiss_index(uri):
+    from vecStore import store_vec
     store_vec(uri)
 
 
 
 
 def call(question):
+    from huggingface_hub import InferenceClient
+    from dotenv import load_dotenv
     client=InferenceClient(
             provider="novita",
             api_key=os.getenv("HF_TOKEN")
@@ -79,7 +80,6 @@ def call(question):
             }
         ],
     )
-
     text=completion.choices[0].message.content
 
     if "</think>" in text:
@@ -97,10 +97,9 @@ def call(question):
 # first check if transcript exists or not
 # first call add_faiss_index
 # then call call() while giving question as param
+def main():
+    pass
 
+if __name__ == "__main__":
+    main()
 
-uri="https://www.youtube.com/watch?v=0cZxl7RLFhs"
-print("adding faiss vecs")
-#add_faiss_index(uri)
-print("added faiss")
-call("what is this video about?")
